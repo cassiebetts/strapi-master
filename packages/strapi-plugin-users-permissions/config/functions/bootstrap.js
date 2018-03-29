@@ -105,15 +105,51 @@ module.exports = async cb => {
     await pluginStore.set({key: 'email', value});
   }
 
-  if (!await pluginStore.get({key: 'advanced'})) {
+  const advanced = await pluginStore.get({key: 'advanced'});
+
+  // Create shadow relations
+  // const addPre = async () => {
+  //   const pre = (schema) => {
+  //     schema.path('created_by', {
+  //       type: 'virtual',
+  //       ref: strapi.plugins['users-permissions'].models['user'].globalId,
+  //       via: FK.via,
+  //       justOne: true
+  //     });
+  //
+  //     ['validate', 'update'].map((key) => {
+  //       schema.pre(key, function (next) {
+  //         const {_user} = this;
+  //         delete this._user;
+  //
+  //         next();
+  //       });
+  //     });
+  //   };
+  //
+  //   Object.keys(strapi.plugins).map((plugin) => {
+  //     Object.keys(strapi.plugins[plugin].models).map((model) => {
+  //       pre(strapi.plugins[plugin].models[model].schema);
+  //     });
+  //   });
+  //
+  //   Object.keys(strapi.models).map((model) => {
+  //     pre(strapi.models[model].schema);
+  //   });
+  // }
+
+  if (!advanced) {
     const value = {
       unique_email: true,
       allow_register: true,
+      createdBy: true,
       default_role: 'authenticated'
     };
 
     await pluginStore.set({key: 'advanced', value});
   }
+
+  // addPre();
 
   strapi.plugins['users-permissions'].services.userspermissions.syncSchema(() => {
     strapi.plugins['users-permissions'].services.userspermissions.initialize(cb);

@@ -1,6 +1,14 @@
 module.exports = async (ctx, next) => {
   let role;
 
+  const pluginStore = strapi.store({
+    environment: '',
+    type: 'plugin',
+    name: 'users-permissions'
+  });
+
+  const advanced = await pluginStore.get({key: 'advanced'});
+
   if (ctx.request && ctx.request.header && ctx.request.header.authorization) {
     try {
       const { _id, id } = await strapi.plugins['users-permissions'].services.jwt.getToken(ctx);
@@ -19,6 +27,10 @@ module.exports = async (ctx, next) => {
     }
 
     role = ctx.state.user.role;
+
+    if (!ctx.request.admin && advanced.createdBy && (ctx.request.method === 'POST' || ctx.request.method === 'PUT')) {
+      ctx.request.body.created_by = (ctx.state.user.id || ctx.state.user._id).toString();
+    }
 
     if (role.type === 'root') {
       return await next();

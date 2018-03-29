@@ -39,10 +39,10 @@
       "plugin": "users-permissions",
       "configurable": false
     },
-    "picture": {
-      "collection": "file",
-      "via": "related",
-      "plugin": "upload"
+    "owned": {
+      "collection": "*",
+      "filter": "field",
+      "configurable": false
     }
   },
   "collectionName": "users-permissions_user"

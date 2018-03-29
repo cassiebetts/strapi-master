@@ -101,7 +101,7 @@ class SelectMany extends React.Component { // eslint-disable-line react/prefer-s
             if (item) {
               return {
                 value: get(item, 'value') || item,
-                label: get(item, 'label') || templateObject({ mainField: this.props.relation.displayedAttribute }, item).mainField || item.value.id,
+                label: get(item, 'label') || templateObject({ mainField: this.props.relation.displayedAttribute }, item).mainField || get(item, 'value.id', ''),
               };
             }
           })}

@@ -707,7 +707,9 @@ module.exports = function (strapi) {
       const value = entry[params.alias] || [];
 
       // Retrieve association.
-      const association = Model.associations.find(association => association.via === params.alias)[0];
+      const association = Model.associations.find(association => {
+        return (association.via || association.alias) === params.alias;
+      });
 
       if (!association) {
         throw Error(`Impossible to create relationship with ${params.ref} (${params.refId})`);
@@ -731,7 +733,7 @@ module.exports = function (strapi) {
       value.push({
         ref: params.refId,
         kind: params.ref,
-        field: association.filter
+        field: params.field
       });
 
       entry[params.alias] = value;
