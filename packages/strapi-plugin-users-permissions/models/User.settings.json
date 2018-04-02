@@ -38,12 +38,6 @@
       "via": "users",
       "plugin": "users-permissions",
       "configurable": false
-    },
-    "owned": {
-      "collection": "*",
-      "filter": "field",
-      "configurable": false
     }
-  },
-  "collectionName": "users-permissions_user"
+  }
 }

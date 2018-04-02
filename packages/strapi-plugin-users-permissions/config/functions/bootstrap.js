@@ -14,13 +14,41 @@ const fs = require('fs');
 const uuid = require('uuid/v4');
 
 module.exports = async cb => {
+  const settingsPath = path.join(strapi.config.appPath, 'plugins', 'users-permissions', 'config', 'settings.json');
+
   if (!_.get(strapi.plugins['users-permissions'], 'config.jwtSecret')) {
     try {
       const jwtSecret = uuid();
 
-      fs.writeFileSync(path.join(strapi.config.appPath, 'plugins', 'users-permissions', 'config', 'jwt.json'), JSON.stringify({
+      try {
+        var settings = require(settingsPath);
+      } catch (e) {
+        var settings = {};
+      }
+
+      fs.writeFileSync(settingsPath, JSON.stringify(Object.assign(settings, {
         jwtSecret
-      }, null, 2), 'utf8');
+      }), null, 2), 'utf8');
+
+      _.set(strapi.plugins['users-permissions'], 'config.jwtSecret', jwtSecret);
+    } catch(err) {
+      strapi.log.error(err);
+    }
+  }
+
+  if (!_.get(strapi.plugins['users-permissions'], 'config.createdBy')) {
+    try {
+      const createdBy = true;
+
+      try {
+        var settings = require(settingsPath);
+      } catch (e) {
+        var settings = {};
+      }
+
+      fs.writeFileSync(settingsPath, JSON.stringify(Object.assign(settings, {
+        createdBy
+      }), null, 2), 'utf8');
 
       _.set(strapi.plugins['users-permissions'], 'config.jwtSecret', jwtSecret);
     } catch(err) {
@@ -105,51 +133,15 @@ module.exports = async cb => {
     await pluginStore.set({key: 'email', value});
   }
 
-  const advanced = await pluginStore.get({key: 'advanced'});
-
-  // Create shadow relations
-  // const addPre = async () => {
-  //   const pre = (schema) => {
-  //     schema.path('created_by', {
-  //       type: 'virtual',
-  //       ref: strapi.plugins['users-permissions'].models['user'].globalId,
-  //       via: FK.via,
-  //       justOne: true
-  //     });
-  //
-  //     ['validate', 'update'].map((key) => {
-  //       schema.pre(key, function (next) {
-  //         const {_user} = this;
-  //         delete this._user;
-  //
-  //         next();
-  //       });
-  //     });
-  //   };
-  //
-  //   Object.keys(strapi.plugins).map((plugin) => {
-  //     Object.keys(strapi.plugins[plugin].models).map((model) => {
-  //       pre(strapi.plugins[plugin].models[model].schema);
-  //     });
-  //   });
-  //
-  //   Object.keys(strapi.models).map((model) => {
-  //     pre(strapi.models[model].schema);
-  //   });
-  // }
-
-  if (!advanced) {
+  if (!await pluginStore.get({key: 'advanced'})) {
     const value = {
       unique_email: true,
       allow_register: true,
-      createdBy: true,
       default_role: 'authenticated'
     };
 
     await pluginStore.set({key: 'advanced', value});
   }
-
-  // addPre();
 
   strapi.plugins['users-permissions'].services.userspermissions.syncSchema(() => {
     strapi.plugins['users-permissions'].services.userspermissions.initialize(cb);
