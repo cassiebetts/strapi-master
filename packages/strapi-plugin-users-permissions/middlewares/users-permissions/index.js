@@ -35,7 +35,8 @@ module.exports = strapi => {
           strapi.models[model].attributes['created_by'] = {
             model: 'user',
             via: 'owned',
-            plugin: 'users-permissions'
+            plugin: 'users-permissions',
+            configurable: false,
           }
         }
 
