@@ -1,6 +1,12 @@
+const _ = require('lodash');
+
 module.exports = async (ctx, next) => {
   if (!ctx.state.user) {
     return ctx.unauthorized();
+  }
+
+  if (!_.get(strapi.plugins['users-permissions'], 'config.createdBy')) {
+    return await next();
   }
 
   const {plugin, controller: model} = ctx.request.route;
@@ -14,7 +20,7 @@ module.exports = async (ctx, next) => {
       return ctx.unauthorized();
     }
   } else {
-
+    // Update query with create_by user._id
   }
 
   await next();

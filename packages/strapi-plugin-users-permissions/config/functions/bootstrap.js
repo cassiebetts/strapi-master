@@ -36,7 +36,7 @@ module.exports = async cb => {
     }
   }
 
-  if (!_.get(strapi.plugins['users-permissions'], 'config.createdBy')) {
+  if (_.get(strapi.plugins['users-permissions'], 'config.createdBy') === undefined) {
     try {
       const createdBy = true;
 
