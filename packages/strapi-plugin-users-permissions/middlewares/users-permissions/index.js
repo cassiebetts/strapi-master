@@ -6,6 +6,7 @@
 
 // Public node modules.
 const _ = require('lodash');
+const pluralize = require('pluralize');
 
 module.exports = strapi => {
   return {
@@ -32,19 +33,20 @@ module.exports = strapi => {
 
       if (_.get(strapi.plugins['users-permissions'], 'config.createdBy')) {
         for (const model in strapi.models) {
-          strapi.models[model].attributes['created_by'] = {
+          strapi.models[model].attributes['owner'] = {
             model: 'user',
-            via: 'owned',
+            via: pluralize.plural(model.toLowerCase()),
             plugin: 'users-permissions',
-            configurable: false,
-          }
+            configurable: false
+          };
+
+          strapi.plugins['users-permissions'].models.user.attributes[pluralize.plural(model.toLowerCase())] = {
+            collection: model.toLowerCase(),
+            via: 'owner',
+            configurable: false
+          };
         }
 
-        strapi.plugins['users-permissions'].models.user.attributes.owned = {
-          collection: '*',
-          filter: 'field',
-          configurable: false
-        }
       }
 
       cb();

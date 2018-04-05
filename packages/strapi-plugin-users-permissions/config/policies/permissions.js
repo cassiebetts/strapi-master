@@ -27,7 +27,7 @@ module.exports = async (ctx, next) => {
     role = ctx.state.user.role;
 
     if (!ctx.request.admin && strapi.plugins['users-permissions'].config.createdBy && (ctx.request.method === 'POST' || ctx.request.method === 'PUT')) {
-      ctx.request.body.created_by = (ctx.state.user.id || ctx.state.user._id).toString();
+      ctx.request.body.owner = (ctx.state.user.id || ctx.state.user._id).toString();
     }
 
     if (role.type === 'root') {
