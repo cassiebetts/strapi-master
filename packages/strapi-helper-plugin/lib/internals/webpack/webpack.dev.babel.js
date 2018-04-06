@@ -55,22 +55,22 @@ if (process.env.npm_lifecycle_event === 'start') {
   }, {});
 }
 
-
 const port = argv.port || process.env.PORT || 3000;
+
+const pluginEntries = Object.assign({
+    main: [
+      `webpack-hot-middleware/client?path=http://localhost:${port}/__webpack_hmr`,
+      path.join(appPath, 'admin', 'admin', 'src', 'app.js'),
+    ]
+  }, plugins.src.reduce((acc, current) => {
+      acc[current] = path.resolve(plugins.folders[current], 'app.js');
+
+      return acc;
+    }, {}));
 
 module.exports = require('./webpack.base.babel')({
   // Add hot reloading in development
-  entry: Object.assign({
-      main: [
-        `webpack-hot-middleware/client?path=http://localhost:${port}/__webpack_hmr`,
-        path.join(appPath, 'admin', 'admin', 'src', 'app.js'),
-      ]
-    }, plugins.src.reduce((acc, current) => {
-        acc[current] = path.resolve(plugins.folders[current], 'app.js');
-
-        return acc;
-      }, {})
-  ),
+  entry: pluginEntries,
 
   // Don't use hashes in dev mode for better performance
   output: {
@@ -83,6 +83,7 @@ module.exports = require('./webpack.base.babel')({
   plugins: [
     new webpack.HotModuleReplacementPlugin(), // Tell webpack we want hot reloading
     new webpack.optimize.CommonsChunkPlugin({
+      async: true,
       name: 'common',
       minChunks: 2,
     }),
@@ -98,15 +99,15 @@ module.exports = require('./webpack.base.babel')({
   ], // eslint-disable-line no-use-before-define,
 
   // Process the CSS with PostCSS
-  postcssPlugins: [
-    postcssFocus(), // Add a :focus to every :hover
-    cssnext({ // Allow future CSS features to be used, also auto-prefixes the CSS...
-      browsers: ['last 2 versions', 'IE > 10'], // ...based on this browser list
-    }),
-    postcssReporter({ // Posts messages from plugins to the terminal
-      clearMessages: true,
-    }),
-  ],
+  // postcssPlugins: [
+  //   postcssFocus(), // Add a :focus to every :hover
+  //   cssnext({ // Allow future CSS features to be used, also auto-prefixes the CSS...
+  //     browsers: ['last 2 versions', 'IE > 10'], // ...based on this browser list
+  //   }),
+  //   postcssReporter({ // Posts messages from plugins to the terminal
+  //     clearMessages: true,
+  //   }),
+  // ],
 
   // Tell babel that we want presets and to hot-reload
   babelPresets: [

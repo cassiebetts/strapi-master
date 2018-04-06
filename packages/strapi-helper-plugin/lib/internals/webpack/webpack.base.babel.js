@@ -18,6 +18,7 @@ const appPath = (() => {
 
   return isAdmin ? path.resolve(process.env.PWD, '..') : path.resolve(process.env.PWD, '..', '..');
 })();
+
 const isSetup = path.resolve(process.env.PWD, '..', '..') === path.resolve(process.env.INIT_CWD);
 const adminPath = (() => {
   if (isAdmin && isSetup) {
@@ -110,6 +111,14 @@ if (process.env.npm_lifecycle_event === 'start') {
   }, {});
 }
 
+const foldersToInclude = [path.join(adminPath, 'admin', 'src')]
+  .concat(plugins.src.reduce((acc, current) => {
+    acc.push(path.resolve(appPath, 'plugins', current, 'admin', 'src'), plugins.folders[current]);
+
+    return acc;
+  }, []))
+  .concat([path.join(adminPath, 'node_modules', 'strapi-helper-plugin', 'lib', 'src')]);
+
 module.exports = (options) => ({
   entry: options.entry,
   output: Object.assign({ // Compile into js/build.js
@@ -119,8 +128,9 @@ module.exports = (options) => ({
     rules: [
       {
         test: /\.js$/, // Transform all .js files required somewhere with Babel
+        enforce: 'pre',
         use: {
-          loader: 'babel-loader',
+          loader: require.resolve('babel-loader'),
           options: {
             presets: options.babelPresets,
             env: {
@@ -142,97 +152,119 @@ module.exports = (options) => ({
             }
           }
         },
-        include: [path.join(adminPath, 'admin', 'src')]
-          .concat(plugins.src.reduce((acc, current) => {
-            acc.push(path.resolve(appPath, 'plugins', current, 'admin', 'src'), plugins.folders[current]);
-
-            return acc;
-          }, []))
-          .concat([path.join(adminPath, 'node_modules', 'strapi-helper-plugin', 'lib', 'src')])
+        include: foldersToInclude,
       },
       {
-        test: /\.scss$/,
-        use: [
+          test: /\.html$/,
+          include: [path.join(adminPath, 'admin', 'src')],
+          loader: 'html-loader',
+      },
+      {
+        oneOf: [
+          // "url" loader works like "file" loader except that it embeds assets
+					// smaller than specified limit in bytes as data URLs to avoid requests.
+					// A missing `test` is equivalent to a match.
+					{
+						test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/, /\.(mp4|webm)$/],
+						loader: require.resolve('url-loader'),
+						options: {
+							limit: 10000,
+							name: 'static/media/[name].[hash:8].[ext]',
+						},
+					},
+					{
+						test: /\.(js|jsx|mjs)$/,
+						loader: require.resolve('babel-loader'),
+            include: foldersToInclude,
+						options: {
+							// This is a feature of `babel-loader` for webpack (not Babel itself).
+							// It enables caching results in ./node_modules/.cache/babel-loader/
+							// directory for faster rebuilds.
+							cacheDirectory: true,
+						},
+					},
+          // "postcss" loader applies autoprefixer to our CSS.
+					// "css" loader resolves paths in CSS and adds assets as dependencies.
+					// "style" loader turns CSS into JS modules that inject <style> tags.
+					// In production, we use a plugin to extract that CSS to a file, but
+					// in development "style" loader enables hot editing of CSS.
+					{
+						test: /\.css$/,
+            include: /node_modules/,
+						use: [
+							require.resolve('style-loader'),
+							{
+								loader: require.resolve('css-loader'),
+								options: {
+									importLoaders: 1,
+                  minimize: process.env.NODE_ENV === 'production',
+								},
+							},
+							{
+								loader: require.resolve('postcss-loader'),
+								options: {
+									// Necessary for external CSS imports to work
+									// https://github.com/facebookincubator/create-react-app/issues/2677
+									ident: 'postcss',
+                  localIdentName: `${pluginId}[local]__[path][name]__[hash:base64:5]`,
+                  minimize: process.env.NODE_ENV === 'production',
+                  config: {
+                    path: path.resolve(__dirname, '..', 'postcss', 'postcss.config.js'),
+                  },
+								},
+							},
+						],
+					},
           {
-            loader: 'style-loader'
+            test: /\.(eot|svg|ttf|woff|woff2)$/,
+            loader: 'file-loader'
           },
           {
-            loader: 'css-loader',
-            options: {
-              localIdentName: `${pluginId}[local]__[path][name]__[hash:base64:5]`,
-              modules: true,
-              importLoaders: 1,
-              sourceMap: true,
-              minimize: process.env.NODE_ENV === 'production'
-            },
-          },
-          // NOTE: not sure we need this loader
-          // {
-          //   loader: 'postcss-loader',
-          //   options: {
-          //     config: {
-          //       path: path.resolve(__dirname, '..', 'postcss', 'postcss.config.js'),
-          //     },
-          //   }
-          // },
-          {
-            loader: 'sass-loader'
-          }
-        ]
-      },
-      {
-        test: /\.css$/,
-        include: /node_modules/,
-        loaders: [
-          'style-loader',
-          {
-            loader: 'css-loader',
-            options: {
-              minimize: process.env.NODE_ENV === 'production',
-              sourceMap: true
-            }
-          }
-        ]
-      },
-      {
-        test: /\.(eot|svg|ttf|woff|woff2)$/,
-        loader: 'file-loader'
-      },
-      {
-        test: /\.(jpg|png|gif)$/,
-        loaders: [
-          'file-loader',
-          {
-            loader: 'image-webpack-loader',
-            query: {
-              mozjpeg: {
-                progressive: true
+            test: /\.scss$/,
+            include: foldersToInclude,
+            use: [
+              {
+                loader: 'style-loader'
               },
-              gifsicle: {
-                interlaced: false
+              {
+                loader: require.resolve('css-loader'),
+                options: {
+                  localIdentName: `${pluginId}[local]__[path][name]__[hash:base64:5]`,
+                  modules: true,
+                  importLoaders: 1,
+                  sourceMap: true,
+                  minimize: process.env.NODE_ENV === 'production'
+                },
               },
-              optipng: {
-                optimizationLevel: 4
+              {
+                loader: require.resolve('postcss-loader'),
+                options: {
+                  ident: 'postcss',
+                  localIdentName: `${pluginId}[local]__[path][name]__[hash:base64:5]`,
+                  minimize: process.env.NODE_ENV === 'production',
+                  config: {
+                    path: path.resolve(__dirname, '..', 'postcss', 'postcss.config.js'),
+                  },
+                }
               },
-              pngquant: {
-                quality: '65-90',
-                speed: 4
+              {
+                loader: require.resolve('sass-loader')
               }
-            }
-          }
+            ]
+          },
+          {
+						// Exclude `js` files to keep "css" loader working as it injects
+						// its runtime that would otherwise processed through "file" loader.
+						// Also exclude `html` and `json` extensions so they get processed
+						// by webpacks internal loaders.
+						exclude: [/\.(js|jsx|mjs)$/, /\.html$/, /\.json$/, /\.scss$/],
+						loader: require.resolve('file-loader'),
+						options: {
+							name: 'static/media/[name].[hash:8].[ext]',
+						},
+					},
         ]
       },
-      {
-        test: /\.html$/,
-        loader: 'html-loader',
-      },
-      {
-        test: /\.(mp4|webm)$/,
-        loader: 'url-loader',
-        options: {
-          limit: 10000,
-        }
-      }
     ],
 
   },
@@ -241,7 +273,6 @@ module.exports = (options) => ({
       // make fetch available
       fetch: 'exports-loader?self.fetch!whatwg-fetch',
     }),
-
     // Always expose NODE_ENV to webpack, in order to use `process.env.NODE_ENV`
     // inside your code for any environment checks; UglifyJS will automatically
     // drop any unreachable code.
@@ -264,6 +295,7 @@ module.exports = (options) => ({
     ],
     alias: options.alias,
     symlinks: false,
+    cacheWithContext: false,
     extensions: ['.js'],
     mainFields: [
       'browser',
