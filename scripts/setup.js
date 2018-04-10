@@ -1,4 +1,16 @@
 const shell = require('shelljs');
+// Check npm version
+const npm = shell.exec('npm -v').stdout;
+
+if (parseFloat(npm) < 5) {
+  throw new Error('[ERROR: Strapi] You need npm version @>=5');
+}
+
+const nodeVersion = shell.exec('node -v').stdout.replace('v', '');
+
+if (parseFloat(nodeVersion) < 8.6) {
+  throw new Error('[ERROR: Strapi] You need to use node version @>=9');
+}
 
 // Store installation start date.
 const silent = process.env.npm_config_debug !== 'true';
@@ -104,6 +116,7 @@ shell.rm('-f', 'package-lock.json');
 watcher('📦  Linking strapi-plugin-settings-manager...', 'npm link --no-optional', false);
 
 
+// Plugins with admin and other plugin's dependencies
 shell.cd('../strapi-plugin-upload');
 watcher('', 'npm install ../strapi-helper-plugin --no-optional');
 watcher('', 'npm install ../strapi-upload-local --no-optional');
