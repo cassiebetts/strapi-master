@@ -46,7 +46,18 @@ if (process.env.npm_lifecycle_event === 'start') {
     plugins.exist = true;
   }
 
-  plugins.src = process.env.IS_ADMIN === 'true' && !plugins.exist ? fs.readdirSync(path.resolve(appPath, 'plugins')).filter(x => x[0] !== '.') : [];
+  plugins.src = process.env.IS_ADMIN === 'true' && !plugins.exist ? fs.readdirSync(path.resolve(appPath, 'plugins')).filter(x => {
+    let hasAdminFolder;
+
+    try {
+      fs.accessSync(path.resolve(appPath, 'plugins', x, 'admin', 'src', 'containers', 'App'));
+      hasAdminFolder = true;
+    } catch(err) {
+      hasAdminFolder = false;
+    }
+
+    return  x[0] !== '.' && hasAdminFolder;
+  }) : [];
 
   plugins.folders = plugins.src.reduce((acc, current) => {
     acc[current] = path.resolve(appPath, 'plugins', current, 'node_modules', 'strapi-helper-plugin', 'lib', 'src');
@@ -57,20 +68,24 @@ if (process.env.npm_lifecycle_event === 'start') {
 
 
 const port = argv.port || process.env.PORT || 3000;
-
-module.exports = require('./webpack.base.babel')({
-  // Add hot reloading in development
-  entry: Object.assign({
+// Add Hotreloading
+const entry =  Object.assign(
+  {
     main: [
       `webpack-hot-middleware/client?path=http://localhost:${port}/__webpack_hmr`,
       path.join(appPath, 'admin', 'admin', 'src', 'app.js'),
     ],
-  }, plugins.src.reduce((acc, current) => {
+  },
+  plugins.src.reduce((acc, current) => {
     acc[current] = path.resolve(plugins.folders[current], 'app.js');
 
     return acc;
   }, {})
-  ),
+);
+
+module.exports = require('./webpack.base.babel')({
+  // Add hot reloading in development
+  entry,
 
   // Don't use hashes in dev mode for better performance
   output: {

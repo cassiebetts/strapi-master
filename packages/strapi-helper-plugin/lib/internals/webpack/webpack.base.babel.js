@@ -101,7 +101,18 @@ if (process.env.npm_lifecycle_event === 'start') {
   }
 
   // Read `plugins` directory.
-  plugins.src = isAdmin && !plugins.exist ? fs.readdirSync(path.resolve(appPath, 'plugins')).filter(x => x[0] !== '.') : [];
+  plugins.src = isAdmin && !plugins.exist ? fs.readdirSync(path.resolve(appPath, 'plugins')).filter(x => {
+    let hasAdminFolder;
+
+    try {
+      fs.accessSync(path.resolve(appPath, 'plugins', x, 'admin', 'src', 'containers', 'App'));
+      hasAdminFolder = true;
+    } catch(err) {
+      hasAdminFolder = false;
+    }
+
+    return x[0] !== '.' && hasAdminFolder;
+  }) : [];
 
   // Construct object of plugin' paths.
   plugins.folders = plugins.src.reduce((acc, current) => {
@@ -110,6 +121,14 @@ if (process.env.npm_lifecycle_event === 'start') {
     return acc;
   }, {});
 }
+
+const foldersToInclude = [path.join(adminPath, 'admin', 'src')]
+  .concat(plugins.src.reduce((acc, current) => {
+    acc.push(path.resolve(appPath, 'plugins', current, 'admin', 'src'), plugins.folders[current]);
+
+    return acc;
+  }, []))
+  .concat([path.join(adminPath, 'node_modules', 'strapi-helper-plugin', 'lib', 'src')]);
 
 module.exports = (options) => ({
   entry: options.entry,
@@ -123,13 +142,7 @@ module.exports = (options) => ({
           {
             test: /\.js$/, // Transform all .js files required somewhere with Babel,
             loader: require.resolve('babel-loader'),
-            include: [path.join(adminPath, 'admin', 'src')]
-              .concat(plugins.src.reduce((acc, current) => {
-                acc.push(path.resolve(appPath, 'plugins', current, 'admin', 'src'), plugins.folders[current]);
-
-                return acc;
-              }, []))
-              .concat([path.join(adminPath, 'node_modules', 'strapi-helper-plugin', 'lib', 'src')]),
+            include: foldersToInclude,
             options: {
               presets: options.babelPresets,
               env: {
@@ -178,6 +191,7 @@ module.exports = (options) => ({
           },
           {
             test: /\.scss$/,
+            include: foldersToInclude,
             use: [
               {
                 loader: require.resolve('style-loader'),
@@ -235,6 +249,7 @@ module.exports = (options) => ({
           },
           {
             test: /\.html$/,
+            include: [path.join(adminPath, 'admin', 'src')],
             use: require.resolve('html-loader'),
           },
           {
