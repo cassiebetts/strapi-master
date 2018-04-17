@@ -72,12 +72,12 @@ const port = argv.port || process.env.PORT || 3000;
 const entry =  Object.assign(
   {
     main: [
-      `webpack-hot-middleware/client?path=http://localhost:${port}/__webpack_hmr`,
+      `webpack-hot-middleware/client?reload=true&quiet=true&path=http://localhost:${port}/__webpack_hmr`,
       path.join(appPath, 'admin', 'admin', 'src', 'app.js'),
     ],
   },
   plugins.src.reduce((acc, current) => {
-    acc[current] = path.resolve(plugins.folders[current], 'app.js');
+    acc[current] = [path.resolve(plugins.folders[current], 'app.js'), `webpack-hot-middleware/client?reload=true&quiet=true&path=http://localhost:${port}/__webpack_hmr`];
 
     return acc;
   }, {})
