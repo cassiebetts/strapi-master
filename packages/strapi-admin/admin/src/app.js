@@ -78,9 +78,9 @@ if (module.hot) {
 window.onload = function onLoad() {
   if (!window.Intl) {
     Promise.all([
-      System.import('intl'),
-      System.import('intl/locale-data/jsonp/en.js'),
-      System.import('intl/locale-data/jsonp/fr.js'),
+      import('intl'),
+      import('intl/locale-data/jsonp/en.js'),
+      import('intl/locale-data/jsonp/fr.js'),
     ]).then(() => render(translationMessages));
   } else {
     render(translationMessages);

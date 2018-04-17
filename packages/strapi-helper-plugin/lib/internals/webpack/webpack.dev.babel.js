@@ -84,9 +84,13 @@ const entry =  Object.assign(
 );
 
 module.exports = require('./webpack.base.babel')({
-  // Add hot reloading in development
   entry,
-
+  optimization: {
+    splitChunks: {
+      name: "common",
+      minChunks: 2,
+    },
+  },
   // Don't use hashes in dev mode for better performance
   output: {
     filename: '[name].js',
@@ -97,10 +101,6 @@ module.exports = require('./webpack.base.babel')({
   // Add development plugins
   plugins: [
     new webpack.HotModuleReplacementPlugin(), // Tell webpack we want hot reloading
-    new webpack.optimize.CommonsChunkPlugin({
-      name: 'common',
-      minChunks: 2,
-    }),
     new LodashModuleReplacementPlugin(),
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     new HtmlWebpackPlugin({

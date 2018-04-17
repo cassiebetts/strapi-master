@@ -70,7 +70,7 @@ if (module.hot) {
   // have to be constants at compile-time
   module.hot.accept('./i18n', () => {
     if (strapi) {
-      System.import('./i18n').then(result => {
+      import('./i18n').then(result => {
         const translationMessagesUpdated = result.translationMessages;
         strapi
           .refresh(pluginId)

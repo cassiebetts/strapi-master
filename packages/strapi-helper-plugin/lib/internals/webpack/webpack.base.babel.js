@@ -130,8 +130,14 @@ const foldersToInclude = [path.join(adminPath, 'admin', 'src')]
   }, []))
   .concat([path.join(adminPath, 'node_modules', 'strapi-helper-plugin', 'lib', 'src')]);
 
+const mode = process.env.NODE_ENV === 'development' ? 'development' : 'production';
+
 module.exports = (options) => ({
+  mode,
   entry: options.entry,
+  optimization: Object.assign({
+    namedModules: true,
+  }, options.optimization || {}),
   output: Object.assign({ // Compile into js/build.js
     path: path.join(adminPath, 'admin', 'build'),
   }, options.output), // Merge with env dependent settings
@@ -280,7 +286,6 @@ module.exports = (options) => ({
         MODE: JSON.stringify(URLs.mode), // Allow us to define the public path for the plugins assets.
       },
     }),
-    new webpack.NamedModulesPlugin(),
   ].concat(options.plugins),
   resolve: {
     modules: [
