@@ -84,6 +84,7 @@ const entry =  Object.assign(
 );
 
 module.exports = require('./webpack.base.babel')({
+  mode: 'development',
   entry,
   optimization: {
     splitChunks: {

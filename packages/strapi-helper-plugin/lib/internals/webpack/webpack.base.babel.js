@@ -130,10 +130,8 @@ const foldersToInclude = [path.join(adminPath, 'admin', 'src')]
   }, []))
   .concat([path.join(adminPath, 'node_modules', 'strapi-helper-plugin', 'lib', 'src')]);
 
-const mode = process.env.NODE_ENV === 'development' ? 'development' : 'production';
-
 module.exports = (options) => ({
-  mode,
+  mode: options.mode || 'production',
   entry: options.entry,
   optimization: Object.assign({
     namedModules: true,
