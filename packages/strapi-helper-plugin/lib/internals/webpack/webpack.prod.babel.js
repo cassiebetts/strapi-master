@@ -127,11 +127,11 @@ module.exports = base({
       new UglifyJsPlugin({
         sourceMap: true,
         parallel: true,
-        compress: {
-          warnings: false,
-        },
         uglifyOptions: {
           ecma: 8,
+          compressor: {
+            warnings: false,
+          },
         },
       }),
     ],
