@@ -11,7 +11,7 @@ const webpack = require('webpack');
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const base = require('./webpack.base.babel');
 
 // const pkg = require(path.resolve(process.cwd(), 'package.json'));
@@ -45,17 +45,6 @@ const rootAdminpath = (() => {
 const plugins = [
   new webpack.DllReferencePlugin({
     manifest: require(path.resolve(rootAdminpath, 'admin', 'src', 'config', 'manifest.json')),
-  }),
-  // Minify and optimize the JavaScript
-  new webpack.optimize.UglifyJsPlugin({
-    sourceMap: true,
-    parallel: true,
-    compress: {
-      warnings: false,
-    },
-    uglifyOptions: {
-      ecma: 8,
-    },
   }),
   new webpack.LoaderOptionsPlugin({
     minimize: true,
@@ -130,6 +119,22 @@ module.exports = base({
   // In production, we skip all hot-reloading stuff
   entry: {
     main,
+  },
+
+  optimization: {
+    // Minify and optimize the JavaScript
+    minimizer: [
+      new UglifyJsPlugin({
+        sourceMap: true,
+        parallel: true,
+        compress: {
+          warnings: false,
+        },
+        uglifyOptions: {
+          ecma: 8,
+        },
+      }),
+    ],
   },
 
   // Utilize long-term caching by adding content hashes (not compilation hashes) to compiled assets
