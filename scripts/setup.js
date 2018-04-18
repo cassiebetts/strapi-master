@@ -37,26 +37,18 @@ const watcher = (label, cmd, withSuccess = true) => {
 
 };
 
-const asyncWatcher = (label, cmd, withSuccess = true) => {
+const asyncWatcher = (label, cmd, withSuccess = true, resolve) => {
   if (label.length > 0) {
     shell.echo(label);
   }
 
-  const child = shell.exec(cmd, {
-    silent,
-    async: true,
-  });
-
-  child.stdout.on('data', data => {
-    if (data.stderr && data.code !== 0) {
-      console.error(data.stderr);
+  return shell.exec(cmd, { silent, async: true }, (code, stdout, stderr) => {
+    if (stderr && code !== 0) {
+      console.error(stderr);
       process.exit(1);
     }
 
-    if (label.length > 0 && withSuccess) {
-      shell.echo('✅  Success');
-      shell.echo('');
-    }
+    return resolve();
   });
 };
 
@@ -107,6 +99,14 @@ shell.cd('../strapi-mongoose');
 watcher('', 'npm install ../strapi-utils');
 watcher('📦  Linking strapi-mongoose...', 'npm link');
 
+shell.cd('../strapi-knex');
+watcher('📦  Linking strapi-knex...', 'npm link');
+
+shell.cd('../strapi-bookshelf');
+watcher('', 'npm install ../strapi-utils');
+watcher('', 'npm install ../strapi-knex');
+watcher('📦  Linking strapi-bookshelf...', 'npm link');
+
 shell.cd('../strapi');
 watcher('', 'npm install ../strapi-generate ../strapi-generate-admin ../strapi-generate-api ../strapi-generate-new ../strapi-generate-plugin ../strapi-generate-policy ../strapi-generate-service ../strapi-utils');
 watcher('📦  Linking strapi...', 'npm link');
@@ -120,7 +120,6 @@ watcher('📦  Linking strapi-upload-aws-s3...', 'npm link --no-optional', false
 
 // Plugins with admin
 shell.cd('../strapi-plugin-email');
-watcher('', 'npm install ../strapi-helper-plugin --no-optional');
 shell.rm('-f', 'package-lock.json');
 watcher('📦  Linking strapi-plugin-email...', 'npm link --no-optional', false);
 
@@ -154,14 +153,13 @@ watcher('', 'npm install ../strapi-generate-api --no-optional');
 shell.rm('-f', 'package-lock.json');
 watcher('📦  Linking strapi-plugin-content-type-builder...', 'npm link --no-optional', false);
 
-const pluginsToBuild = ['admin', 'content-manager', 'content-type-builder', 'email', 'upload', 'users-permissions'];
+const pluginsToBuild = ['admin', 'content-manager', 'content-type-builder', 'email', 'upload', 'users-permissions', 'settings-manager'];
 
 const buildPlugins = async () => {
   const build = (pckgName) => {
-    return new Promise(async (resolve) => {
+    return new Promise(resolve => {
       const name = pckgName === 'admin' ? pckgName: `plugin-${pckgName}`;
-      asyncWatcher(`🏗  Building ${name}...`, `cd ../strapi-${name} && npm run build`, false);
-      resolve();
+      asyncWatcher(`🏗  Building ${name}...`, `cd ../strapi-${name} && npm run build`, false, resolve);
     });
   };
 

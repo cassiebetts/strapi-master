@@ -113,8 +113,9 @@ module.exports = function() {
             }
 
             // Create `plugins.json` file.
+            // Don't inject the plugins without an Admin
             const data =  Object.keys(this.plugins)
-            .filter(plugin => {
+              .filter(plugin => {
                 let hasAdminFolder;
 
                 try {
