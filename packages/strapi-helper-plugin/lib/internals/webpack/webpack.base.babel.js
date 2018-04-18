@@ -11,6 +11,7 @@ const _ = require('lodash');
 const pkg = require(path.resolve(process.cwd(), 'package.json'));
 const pluginId = pkg.name.replace(/^strapi-/i, '');
 const isAdmin = process.env.IS_ADMIN === 'true';
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const appPath = (() => {
   if (process.env.APP_PATH) {
@@ -110,7 +111,7 @@ if (process.env.npm_lifecycle_event === 'start') {
     } catch(err) {
       hasAdminFolder = false;
     }
-    
+
     return x[0] !== '.' && hasAdminFolder;
   }) : [];
 
@@ -175,6 +176,7 @@ module.exports = (options) => ({
             test: /\.css$/,
             include: /node_modules/,
             use: [
+              MiniCssExtractPlugin.loader,
               'style-loader',
               {
                 loader: 'css-loader',

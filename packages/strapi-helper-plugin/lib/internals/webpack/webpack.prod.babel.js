@@ -3,7 +3,7 @@ const path = require('path');
 const _ = require('lodash');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+// const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const cssnext = require('postcss-cssnext');
 const postcssFocus = require('postcss-focus');
 const postcssReporter = require('postcss-reporter');
@@ -12,6 +12,9 @@ const webpack = require('webpack');
 const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
 const base = require('./webpack.base.babel');
 
 // const pkg = require(path.resolve(process.cwd(), 'package.json'));
@@ -94,7 +97,8 @@ if (isAdmin) {
     chunks: ['main'],
     inject: true,
   }));
-  plugins.push(new ExtractTextPlugin('[name].[contenthash].css'));
+  plugins.push(new MiniCssExtractPlugin({ filename: '[name].[contenthash].css' }));
+  // plugins.push(new ExtractTextPlugin('[name].[contenthash].css'));
   plugins.push(new AddAssetHtmlPlugin({
     filepath: path.resolve(__dirname, 'dist/*.dll.js'),
   }));
@@ -123,6 +127,16 @@ module.exports = base({
 
   optimization: {
     // Minify and optimize the JavaScript
+    splitChunks: {
+      cacheGroups: {
+        styles: {
+          name: 'styles',
+          test: /\.css$/,
+          chunks: 'all',
+          enforce: true,
+        },
+      },
+    },
     minimizer: [
       new UglifyJsPlugin({
         sourceMap: true,
@@ -134,6 +148,7 @@ module.exports = base({
           },
         },
       }),
+      new OptimizeCSSAssetsPlugin({}),
     ],
   },
 
