@@ -12,7 +12,7 @@ const webpack = require('webpack');
 const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+// const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const base = require('./webpack.base.babel');
@@ -97,7 +97,7 @@ if (isAdmin) {
     chunks: ['main'],
     inject: true,
   }));
-  plugins.push(new MiniCssExtractPlugin({ filename: '[name].[contenthash].css' }));
+  plugins.push(new MiniCssExtractPlugin('[name].[contenthash].css'));
   // plugins.push(new ExtractTextPlugin('[name].[contenthash].css'));
   plugins.push(new AddAssetHtmlPlugin({
     filepath: path.resolve(__dirname, 'dist/*.dll.js'),
@@ -127,16 +127,16 @@ module.exports = base({
 
   optimization: {
     // Minify and optimize the JavaScript
-    splitChunks: {
-      cacheGroups: {
-        styles: {
-          name: 'styles',
-          test: /\.css$/,
-          chunks: 'all',
-          enforce: true,
-        },
-      },
-    },
+    // splitChunks: {
+    //   cacheGroups: {
+    //     styles: {
+    //       name: 'styles',
+    //       test: /\.css$/,
+    //       chunks: 'all',
+    //       enforce: true,
+    //     },
+    //   },
+    // },
     minimizer: [
       new UglifyJsPlugin({
         sourceMap: true,
@@ -148,7 +148,7 @@ module.exports = base({
           },
         },
       }),
-      new OptimizeCSSAssetsPlugin({}),
+      // new OptimizeCSSAssetsPlugin({}),
     ],
   },
 
