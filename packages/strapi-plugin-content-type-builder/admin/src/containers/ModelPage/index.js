@@ -49,7 +49,7 @@ import selectModelPage from './selectors';
 import styles from './styles.scss';
 
 // Array of attributes that the ctb can handle at the moment
-const availableAttributes = Object.keys(forms.attribute);
+const availableAttributes = Object.keys(forms.attribute).concat(['float', 'decimal', 'integer']);
 
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable react/jsx-wrap-multilines */
